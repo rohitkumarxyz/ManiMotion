@@ -124,7 +124,6 @@ app.get("/profile", async (req: Request, res: Response): Promise<any> => {
 
 app.post("/chat", async (req: Request, res: Response): Promise<any> => {
     try {
-        // Validate request body
         const parsed = chatApiValidation.safeParse(req.body);
         if (!parsed.success) {
             return res.status(400).json({
@@ -135,7 +134,6 @@ app.post("/chat", async (req: Request, res: Response): Promise<any> => {
 
         const { prompt } = parsed.data;
 
-        // Ensure user is authenticated
         if (!req.user || !req.user.id) {
             return res.status(401).json({
                 status: false,
@@ -143,7 +141,6 @@ app.post("/chat", async (req: Request, res: Response): Promise<any> => {
             });
         }
 
-        // Create the project record
         const project = await client.Project.create({
             data: {
                 prompts: prompt,
@@ -151,7 +148,6 @@ app.post("/chat", async (req: Request, res: Response): Promise<any> => {
             }
         });
 
-        // Get LLM response
         const llmResponse = await getLlmResponse(prompt, {}, generateVideoPrompt);
 
         if (!llmResponse || typeof llmResponse !== "string") {
@@ -161,7 +157,6 @@ app.post("/chat", async (req: Request, res: Response): Promise<any> => {
             });
         }
 
-        // Update the project with the generated code
         await client.Project.update({
             where: { id: project.id },
             data: {
@@ -169,7 +164,6 @@ app.post("/chat", async (req: Request, res: Response): Promise<any> => {
             }
         });
 
-        // Send message to SQS
         const payload = {
             projectId: project.id,
         };
